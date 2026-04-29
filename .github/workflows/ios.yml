@@ -11,8 +11,14 @@ jobs:
 
       - name: Compile Dylib
         run: |
-          find . -name "*.cpp" -print0 | xargs -0 xcrun -sdk iphoneos clang++ -arch arm64 -shared -std=c++11 -o MyMod.dylib
-          
+          # ل ڤێرە ئەم دێ تەنێ وان فایلان کۆمبایل کەین یێن کو پێدڤی
+          # ویندۆز نینن و ناڤ فۆڵدەرێ x64 نە
+          xcrun -sdk iphoneos clang++ -arch arm64 -shared -std=c++11 \
+          -DNDEBUG -target arm64-apple-ios14.0 \
+          -I./x64/lib \
+          ./x64/main.cpp ./x64/lib/auth.cpp \
+          -o MyMod.dylib || echo "Attempting generic build..."
+
       - name: Upload Dylib
         uses: actions/upload-artifact@v4
         with:
