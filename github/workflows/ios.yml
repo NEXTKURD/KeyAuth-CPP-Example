@@ -1,0 +1,15 @@
+name: Build iOS Dylib
+on: [workflow_dispatch]
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile Dylib
+        run: |
+          xcrun -sdk iphoneos clang++ -arch arm64 -shared -std=c++11 main.cpp -o KeyAuth.dylib
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: MyDylib
+          path: KeyAuth.dylib
