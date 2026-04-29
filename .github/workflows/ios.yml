@@ -9,18 +9,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Compile Dylib
+      - name: Find and Compile
         run: |
-          # ل ڤێرە ئەم دێ تەنێ وان فایلان کۆمبایل کەین یێن کو پێدڤی
-          # ویندۆز نینن و ناڤ فۆڵدەرێ x64 نە
+          # ئەڤ دێرە دێ گەڕیێت ل فایلێ main.cpp و هەمی فایلێن دی یێن پێدڤی
+          MAIN_FILE=$(find . -name "main.cpp" | head -n 1)
+          if [ -z "$MAIN_FILE" ]; then
+            MAIN_FILE=$(find . -name "*.cpp" | head -n 1)
+          fi
+          
+          echo "Found main file: $MAIN_FILE"
+          
           xcrun -sdk iphoneos clang++ -arch arm64 -shared -std=c++11 \
-          -DNDEBUG -target arm64-apple-ios14.0 \
-          -I./x64/lib \
-          ./x64/main.cpp ./x64/lib/auth.cpp \
-          -o MyMod.dylib || echo "Attempting generic build..."
+          -w -isysroot $(xcrun --sdk iphoneos --show-sdk-path) \
+          "$MAIN_FILE" -o MyMod.dylib || echo "Failed but continuing..."
 
       - name: Upload Dylib
         uses: actions/upload-artifact@v4
         with:
           name: My-iPhone-Dylib
-          path: MyMod.dylib
+          path: "*.dylib"
+          if-no-files-found: error
