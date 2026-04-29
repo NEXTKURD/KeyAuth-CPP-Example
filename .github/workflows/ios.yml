@@ -11,7 +11,7 @@ jobs:
 
       - name: Compile Dylib
         run: |
-          xcrun -sdk iphoneos clang++ -arch arm64 -shared -std=c++11 *.cpp -o MyMod.dylib
+          find . -name "*.cpp" -print0 | xargs -0 xcrun -sdk iphoneos clang++ -arch arm64 -shared -std=c++11 -o MyMod.dylib
           
       - name: Upload Dylib
         uses: actions/upload-artifact@v4
