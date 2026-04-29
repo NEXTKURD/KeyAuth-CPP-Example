@@ -9,23 +9,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Find and Compile
+      - name: Compile Dylib
         run: |
-          # ئەڤ دێرە دێ گەڕیێت ل فایلێ main.cpp و هەمی فایلێن دی یێن پێدڤی
-          MAIN_FILE=$(find . -name "main.cpp" | head -n 1)
-          if [ -z "$MAIN_FILE" ]; then
-            MAIN_FILE=$(find . -name "*.cpp" | head -n 1)
-          fi
+          # دۆزینەوا هەمی فایلێن .cpp د هەر جهەکێ دابن
+          FILES=$(find . -name "*.cpp" -not -path "*/.*")
+          echo "Files to compile: $FILES"
           
-          echo "Found main file: $MAIN_FILE"
-          
+          # دروستکرنا فایلی ب فەرمانا گشتی
           xcrun -sdk iphoneos clang++ -arch arm64 -shared -std=c++11 \
-          -w -isysroot $(xcrun --sdk iphoneos --show-sdk-path) \
-          "$MAIN_FILE" -o MyMod.dylib || echo "Failed but continuing..."
+          -isysroot $(xcrun --sdk iphoneos --show-sdk-path) \
+          $FILES -o $(pwd)/MyMod.dylib || echo "Compile failed"
+          
+          # پشکنین کا فایل دروست بوو یان نا
+          ls -R $(pwd) | grep .dylib
 
       - name: Upload Dylib
         uses: actions/upload-artifact@v4
         with:
           name: My-iPhone-Dylib
-          path: "*.dylib"
+          path: ./*.dylib
           if-no-files-found: error
