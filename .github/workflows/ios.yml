@@ -9,15 +9,31 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-            - name: Setup Theos
+      - name: Setup Theos
         run: |
           export THEOS=~/theos
           git clone --recursive https://github.com/theos/theos.git $THEOS
-          # بکارئینانا لینکەکێ دی یێ SDK یێ پشتڕاستکری
           curl -L https://github.com/theos/sdks/archive/master.zip -o sdks.zip
-          unzip sdks.zip
+          unzip -q sdks.zip
           mkdir -p $THEOS/sdks
           mv sdks-master/*.sdk $THEOS/sdks/
           rm -rf sdks-master sdks.zip
+
+      - name: Build Dylib
+        run: |
+          export THEOS=~/theos
+          # ئەگەر ناڤێ پڕۆژەی MyKeyAuth بیت، دێ ب ڤی شێوەی بیت
+          make clean
+          make FINALPACKAGE=1
+
+      - name: Upload Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: My-iPhone-Dylib
+          path: |
+            .theos/obj/debug/*.dylib
+            .theos/obj/*.dylib
+            packages/*.deb
