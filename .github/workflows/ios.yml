@@ -1,31 +1,32 @@
 name: Build iOS Dylib
-on: 
+
+on:
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: macos-latest
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Compile Dylib
+      - name: Setup Theos
         run: |
-          # دۆزینەوا هەمی فایلێن .cpp د هەر جهەکێ دابن
-          FILES=$(find . -name "*.cpp" -not -path "*/.*")
-          echo "Files to compile: $FILES"
-          
-          # دروستکرنا فایلی ب فەرمانا گشتی
-          xcrun -sdk iphoneos clang++ -arch arm64 -shared -std=c++11 \
-          -isysroot $(xcrun --sdk iphoneos --show-sdk-path) \
-          $FILES -o $(pwd)/MyMod.dylib || echo "Compile failed"
-          
-          # پشکنین کا فایل دروست بوو یان نا
-          ls -R $(pwd) | grep .dylib
+          export THEOS=~/theos
+          git clone --recursive https://github.com/theos/theos.git $THEOS
+          curl -LO https://github.com/theos/sdks/raw/master/iPhoneOS14.5.sdk.tar.xz
+          mkdir -p $THEOS/sdks
+          tar -xvf iPhoneOS14.5.sdk.tar.xz -C $THEOS/sdks
 
-      - name: Upload Dylib
+      - name: Build Dylib
+        run: |
+          export THEOS=~/theos
+          make clean
+          make
+
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: My-iPhone-Dylib
-          path: ./*.dylib
-          if-no-files-found: error
+          path: .theos/obj/debug/*.dylib
